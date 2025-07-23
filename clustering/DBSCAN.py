@@ -4,41 +4,26 @@ from sklearn.cluster import DBSCAN
 from sklearn.neighbors import NearestNeighbors
 
 
-def dbscan(X: np.ndarray, eps: float, min_samples: int = 4, **kwargs):
+def dbscan(X: np.ndarray, eps: float, min_samples: int = 5, **kwargs):
     """
-    Run DBSCAN and return the fitted estimator and labels.
-
-    Parameters
-    ----------
-    X : ndarray (n_samples, n_features)
-    eps : float
-        Radius of the neighborhood to form a core point.
-    min_samples : int, default=4
-        Minimum #points to form a dense region.
-    kwargs : passed straight to sklearn.cluster.DBSCAN
+    Fit DBSCAN with a user-chosen eps.
+    Returns the fitted model and the cluster labels.
     """
     model = DBSCAN(eps=eps, min_samples=min_samples, **kwargs)
     return model, model.fit_predict(X)
 
 
-def plot_k_distance(X: np.ndarray, min_samples: int = 4):
+def plot_k_distance(X: np.ndarray, k: int = 4):
     """
-    Plot the sorted k‑distance graph (a.k.a. "elbow for DBSCAN").
-    The knee of the curve is a good guess for `eps`.
-
-    Parameters
-    ----------
-    X : ndarray (n_samples, n_features)
-    min_samples : int, default=4
-        k in the k‑distance plot (typically matches the DBSCAN min_samples).
+    Plot the sorted distance to the k-th nearest neighbour for every point.
+    The 'knee' (sharp change in slope) is a good eps guess.
     """
-    nbrs = NearestNeighbors(n_neighbors=min_samples).fit(X)
-    distances, _ = nbrs.kneighbors(X)
+    nbrs = NearestNeighbors(n_neighbors=k).fit(X)
+    dists, _ = nbrs.kneighbors(X)
+    k_dists = np.sort(dists[:, k - 1])
 
-    k_distances = np.sort(distances[:, -1])  # distance to k‑th NN
-    plt.plot(k_distances, marker=".")
-    plt.title(f"{min_samples}‑NN distance plot\n(choose knee ≈ eps)")
+    plt.plot(k_dists)
+    plt.title(f"{k}-NN Distance Plot (choose eps at the knee)")
     plt.xlabel("Points sorted by distance")
-    plt.ylabel(f"Distance to {min_samples}‑th NN")
-    plt.grid(alpha=0.3)
+    plt.ylabel(f"{k}-NN distance")
     plt.show()
